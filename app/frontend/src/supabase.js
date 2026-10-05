@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { supabaseUrl, supabaseKey, supabaseConfigured } from './auth-config.js';
+import { parseCsv } from '../../shared/csv.mjs';
+import { bookingErrors, overlaps } from '../../shared/booking-rules.mjs';
 export const supabase = supabaseConfigured ? createClient(supabaseUrl, supabaseKey, {
   auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true },
 }) : null;
@@ -28,12 +30,46 @@ function checked(result) {
   return result.data;
 }
 
+async function hostedEvents(csv, importing) {
+  const current = await session();
+  if (current.user?.role !== 'admin' || current.user?.status !== 'approved') throw new Error('Administrator access required.');
+  let parsed;
+  try { parsed = parseCsv(csv); } catch (error) {
+    if (importing) throw error;
+    return { valid: false, rows: [{ row: 1, errors: [error.message] }] };
+  }
+  const spaces = checked(await supabase.from('spaces').select('*').eq('active', 1).eq('type', 'classroom'));
+  const campusNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Qyzylorda' }));
+  const rows = parsed.map(entry => {
+    const matches = spaces.filter(space => /^\d+$/.test(entry.classroom) ? space.id === Number(entry.classroom) : space.name === entry.classroom);
+    const space = matches.length === 1 ? matches[0] : null;
+    const row = { ...entry, spaceId: space?.id, attendees: entry.attendees ? Number(entry.attendees) : 1 };
+    return { ...row, errors: bookingErrors(row, space, campusNow) };
+  });
+  // Check each date without relying on the API's default row limit for the whole inventory.
+  for (const date of new Set(rows.filter(row => !row.errors.length).map(row => row.date))) {
+    const existing = checked(await supabase.rpc('booking_schedule', { from_date: date, to_date: date }));
+    for (const row of rows.filter(row => row.date === date)) if (existing.some(other => overlaps(row, other))) row.errors.push('This room already has a reservation or event during that time.');
+  }
+  for (let i = 0; i < rows.length; i++) for (let j = i + 1; j < rows.length; j++) if (rows[i].spaceId && overlaps(rows[i], rows[j])) {
+    rows[i].errors.push(`Overlaps CSV row ${rows[j].row}.`);
+    rows[j].errors.push(`Overlaps CSV row ${rows[i].row}.`);
+  }
+  const valid = rows.every(row => !row.errors.length);
+  if (!importing) return { valid, rows };
+  if (!valid) throw new Error('Correct the CSV errors before importing. No events were imported.');
+  // A single Postgres INSERT is atomic; the exclusion constraint also catches racing bookings.
+  const entries = checked(await supabase.from('bookings').insert(rows.map(({ spaceId, date, start, end, title, attendees }) => ({ spaceId, date, start, end, title, attendees, userId: current.user.id, source: 'event' }))).select('id,spaceId,date,start,end,title,attendees,source'));
+  return { imported: entries.length, entries };
+}
+
 async function session() {
   const auth = checked(await supabase.auth.getSession());
-  if (!auth.session) return { user: null, csrfToken: null, setupRequired: false };
+  const setupRequired = checked(await supabase.rpc('setup_needed'));
+  if (!auth.session) return { user: null, csrfToken: null, setupRequired };
   // Profile authorization comes from protected database columns, never user_metadata.
   const profile = checked(await supabase.from('profiles').select('id,name,email,role,status').eq('id', auth.session.user.id).single());
-  return { user: profile, csrfToken: null, setupRequired: false };
+  return { user: profile, csrfToken: null, setupRequired };
 }
 
 export async function supabaseRequest(path, options = {}) {
@@ -41,6 +77,16 @@ export async function supabaseRequest(path, options = {}) {
   const method = options.method || 'GET';
   const body = options.body ? JSON.parse(options.body) : {};
   if (url.pathname === '/api/auth/session') return session();
+  if (url.pathname === '/api/admin/events/preview' && method === 'POST') return hostedEvents(body.csv, false);
+  if (url.pathname === '/api/admin/events/import' && method === 'POST') return hostedEvents(body.csv, true);
+  if (url.pathname === '/api/auth/setup') {
+    let auth = await supabase.auth.signInWithPassword({ email: body.email, password: body.password });
+    if (auth.error) auth = await supabase.auth.signUp({ email: body.email, password: body.password, options: { data: { full_name: body.name } } });
+    const result = checked(auth);
+    if (!result.session) throw new Error('Confirm your email before administrator setup.');
+    if (!checked(await supabase.rpc('claim_admin', { setup_code: body.code }))) throw new Error('The setup code is invalid or an administrator already exists.');
+    return session();
+  }
   if (url.pathname === '/api/auth/login') {
     checked(await supabase.auth.signInWithPassword({ email: body.email, password: body.password }));
     return session();

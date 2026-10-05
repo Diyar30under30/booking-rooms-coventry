@@ -60,31 +60,59 @@ For remote deployment, serve the application over HTTPS and set `APP_ORIGIN` to 
 
 Passwords use asynchronous scrypt with a unique random salt. Sessions use random tokens whose SHA-256 hashes are stored in SQLite; cookies are HttpOnly, SameSite=Lax, and expire after an absolute seven days. All authenticated mutations require `X-CSRF-Token`. Login, registration and setup require JSON and an allowed Origin, and are rate limited per direct client address. Account registration does not verify email ownership or university affiliation; administrators must check affiliation before approving accounts. Campus SSO is not included. Establish a SQLite-aware backup and administrator recovery policy before deployment.
 
-## Vercel visual preview
+## Vercel and Supabase
 
 The Vercel project is named `booking-club-project`, with Git build root `app`.
 The source repository is https://github.com/Diyar30under30/booking-rooms-coventry
 and the production branch is `main`.
 `app/vercel.json` runs `npm run build:preview` and publishes `preview-dist/`.
-This preview shows the bundled classroom inventory, floor plans and local favorites.
-It displays a preview notice and disables accounts and reservations. The preview
-build generates its inventory from an empty in-memory database; it never reads or
-publishes the local `data/` directory, setup code, user records, or bookings.
+Production uses Supabase project `vgfrjeanmgmumvjuxffg` for email/password
+accounts, approvals, bookings and CSV events. Public connection variables are set
+in Vercel; no service-role key is sent to the browser. Without Supabase variables,
+the preview build shows bundled inventory and disables accounts and bookings.
+Builds never publish the local `data/` directory or its existing records.
 
-The regular `npm run build` and `npm start` still run the complete application
-with the existing SQLite database. A working online booking service needs a
-persistent hosted backend/database before replacing this preview.
+The regular `npm run build` and `npm start` can still use SQLite when Supabase
+variables are absent. For local Supabase builds, put the public variables in
+`app/frontend/.env.local` (ignored by Git). Hosted inventory was seeded separately;
+existing local SQLite accounts and reservations were not migrated.
 
 The schedule includes a room-specific month calendar and half-hour availability.
-Authenticated local sessions show booked/free slots from saved reservations.
+Authenticated sessions show booked/free slots from saved reservations.
 Unavailable or unsigned-in data is marked unknown, never assumed free.
 
-Supabase email/password and Google OAuth client integration is prepared but not
-enabled on Vercel. Provision the database schema, profile policies and schedule
-RPCs before setting `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`.
-Google additionally requires its OAuth provider credentials and allowed redirect
-URLs in Supabase. Hosted CSV administration is not implemented yet. Without these
-variables the regular server retains its existing SQLite authentication.
+Signups start pending and need administrator approval before booking. Email
+confirmation is disabled to preserve the existing manual approval workflow without
+requiring an SMTP provider; administrators must verify university affiliation.
+Use **Sign in / Register → Set up administrator** and the one-time code in
+`data/supabase-admin-setup-code.txt` to create the first hosted administrator.
+Only a SHA-256 hash is stored in the private database schema. Claiming the code is
+atomic and permanently disables setup. Keep the code out of Git and screenshots.
+
+Schema migrations and Auth configuration are in `app/backend/supabase/`.
+RLS restricts profiles, booking ownership and approvals. Database constraints
+reject overlapping reservations, invalid hours and capacity violations. Schedule
+RPCs hide other users' booking purposes and identities. Campus time is
+`Asia/Qyzylorda`. Hosted CSV inserts are atomic. Telegram notifications remain
+available only in the SQLite backend.
+
+Google OAuth client support is included but disabled until credentials are set.
+Create a Google Cloud web OAuth client with origin
+`https://booking-club-project.vercel.app` and callback
+`https://vgfrjeanmgmumvjuxffg.supabase.co/auth/v1/callback`. Configure its client ID
+and secret privately in Supabase Authentication → Sign In / Providers → Google,
+then set `VITE_GOOGLE_AUTH_ENABLED=true` in Vercel and redeploy. Never commit the
+Google client secret. This session could not access Google Cloud because both
+browser automation runtimes failed to start.
+
+`tests/hosted-ui.mjs` verifies hosted login, CSV events, booking conflicts,
+cancellation and calendar availability using a disposable approved QA account.
+Its required environment variables are listed at the top of the file. It removes
+only the test's uniquely named bookings; remove the disposable account afterward.
+
+The database security advisor has no RLS findings. The Auth advisor reports that
+[leaked-password protection](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)
+is disabled; the project currently enforces a 12-character minimum password.
 
 ## Docker
 

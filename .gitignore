@@ -10,4 +10,5 @@ data/
 *.log
 .vercel/
 preview-dist/
+app/backend/supabase/.temp/
 

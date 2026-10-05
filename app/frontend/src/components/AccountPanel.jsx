@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { mutate, previewMode } from '../api.js';
-import { supabaseConfigured } from '../auth-config.js';
+import { supabaseConfigured, googleAuthEnabled } from '../auth-config.js';
 
 export default function AccountPanel({ setupRequired, onSession }) {
   const [mode, setMode] = useState('login');
@@ -27,10 +27,10 @@ export default function AccountPanel({ setupRequired, onSession }) {
     } catch (failure) { setError(failure.message); } finally { setBusy(false); }
   }
   return <section className="account-panel collection">
-    {(supabaseConfigured || previewMode) && <><button className="secondary google-sign-in" onClick={google} disabled={busy || !supabaseConfigured}><span aria-hidden="true">G</span>Continue with Google</button><p className="panel-description">{previewMode ? 'Login is being connected to Supabase. Email and Google sign-in will be available when setup is complete.' : 'Use your Google account or sign in with your email below.'}</p></>}
+    {(supabaseConfigured || previewMode) && <><button className="secondary google-sign-in" onClick={google} disabled={busy || !supabaseConfigured || !googleAuthEnabled}><span aria-hidden="true">G</span>Continue with Google</button><p className="panel-description">{previewMode ? 'Login is being connected to Supabase.' : googleAuthEnabled ? 'Use your Google account or sign in with your email below.' : 'Google sign-in is not available yet. Create an account or sign in with your email below.'}</p></>}
     <div className="tab-row" aria-label="Account options">{[['login', 'Sign in'], ['register', 'Create account'], ...(setupRequired ? [['setup', 'Set up administrator']] : [])].map(([key, label]) => <button key={key} className={mode === key ? 'secondary selected-tab' : 'secondary'} onClick={() => { setMode(key); setError(''); setNotice(''); }}>{label}</button>)}</div>
     <h2>{mode === 'login' ? 'Sign in to book a classroom' : mode === 'register' ? 'Create your university account' : 'Set up the first administrator'}</h2>
-    <p className="panel-description">{mode === 'register' ? 'Students, teachers and university staff can register. Booking access begins after administrator approval.' : mode === 'setup' ? 'Read the setup code from data/admin-setup-code.txt on the server, then enter it here. The administrator setup is available only until the first administrator is created.' : 'Use your registered email and password. You can browse classrooms and booking rules before signing in.'}</p>
+    <p className="panel-description">{mode === 'register' ? 'Students, teachers and university staff can register. Booking access begins after administrator approval.' : mode === 'setup' ? `Read the setup code from data/${supabaseConfigured ? 'supabase-admin-setup-code' : 'admin-setup-code'}.txt in the project folder, then enter it here. Setup is available only until the first administrator is created.` : 'Use your registered email and password. You can browse classrooms and booking rules before signing in.'}</p>
     <form className="account-form" onSubmit={submit} key={mode}>
       {mode === 'setup' && <label>Administrator setup code<input name="code" autoComplete="off" required/></label>}
       {mode !== 'login' && <label>Full name<input name="name" autoComplete="name" maxLength={100} required/></label>}

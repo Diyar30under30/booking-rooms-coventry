@@ -126,9 +126,9 @@ export default function App() {
     catch (failure) { setError(failure.message); }
   }
   async function onSession(session) {
-    setUser(session.user); setCsrfToken(session.csrfToken); setFeedback(`Welcome, ${session.user.name}.`); setError('');
+    setUser(session.user); setCsrfToken(session.csrfToken); setFeedback(`Welcome, ${session.user.name}.`); setError(''); setPage('find');
     await refreshSession();
-    await refreshReservations(); setPage('find');
+    await refreshReservations();
   }
   async function logout() {
     try { await mutate('/api/auth/logout', 'POST', {}); setCsrfToken(null); setUser(null); setMine([]); setBookings([]); setScheduleEntries([]); setModal(null); setPage('find'); await refreshSession(); }
