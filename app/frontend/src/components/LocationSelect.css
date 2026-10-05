@@ -1,0 +1,14 @@
+.location-select{width:240px;max-width:100%;min-width:0}
+.location-trigger{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;min-height:48px;padding:12px 14px;border:1px solid #d5dfe8;border-radius:10px;background:#fff;color:#223b53;font-size:16px;font-weight:500;line-height:1.4;text-align:left;transition:border-color .15s,box-shadow .15s}
+.location-trigger span{min-width:0;overflow-wrap:anywhere}
+.location-trigger svg{flex-shrink:0;color:#64778a;transition:transform .15s}
+.location-trigger:hover{border-color:#92aec6;background:#fcfdff}
+.location-trigger:focus-visible,.location-trigger[aria-expanded=true]{border-color:#719bc1;outline:0;box-shadow:0 0 0 3px #dcecff}
+.location-trigger[aria-expanded=true] svg{transform:rotate(180deg)}
+.location-menu{position:fixed;z-index:1000;overflow-y:auto;overscroll-behavior:contain;padding:5px;background:#fff;border:1px solid #dce4ec;border-radius:12px;box-shadow:0 10px 30px #1f3d5b24;font-family:'DM Sans',Arial,sans-serif;font-size:16px}
+.location-option{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:12px 10px;border-radius:7px;color:#30445a;line-height:1.4;cursor:pointer;overflow-wrap:anywhere}
+.location-option svg{flex-shrink:0;color:#285e92}
+.location-option:hover,.location-option.is-active{background:#f0f5fb;outline:2px solid #bfd3e7;outline-offset:-2px}
+.location-option[aria-selected=true]{background:#e7f1ff;color:#234f79;font-weight:600}
+@media(max-width:600px){.location-select{width:100%;flex:1 1 190px}.location-trigger{min-height:48px}.location-menu{box-shadow:0 8px 24px #1f3d5b26}}
+@media(prefers-reduced-motion:reduce){.location-trigger,.location-trigger svg{transition:none}}

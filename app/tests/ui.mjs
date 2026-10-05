@@ -48,7 +48,8 @@ async function screenshot(page, filename) {
 }
 async function finder(page, floor = 'Floor 2') {
   await go(page, 'Find a classroom');
-  await page.getByLabel('Building', { exact: true }).selectOption('Science Center');
+  await page.getByRole('combobox', { name: 'Building', exact: true }).click();
+  await page.getByRole('option', { name: 'Science Center', exact: true }).click();
   await page.getByLabel('Floor', { exact: true }).selectOption(floor);
   await page.getByLabel('Booking date', { exact: true }).fill(date);
   await page.locator('.search-bar').getByRole('button', { name: 'Find a classroom', exact: true }).click();
@@ -171,7 +172,8 @@ try {
   // Verify the requested Coventry inventory through real filters, search and bookings.
   await page.setViewportSize({ width: 1505, height: 1045 });
   await go(page, 'Find a classroom');
-  await page.getByLabel('Building', { exact: true }).selectOption('Coventry');
+  await page.getByRole('combobox', { name: 'Building', exact: true }).click();
+  await page.getByRole('option', { name: 'Coventry', exact: true }).click();
   assert.deepEqual(await page.getByLabel('Floor', { exact: true }).locator('option').allTextContents(), ['Floor 2', 'Floor 3', 'Floor 4']);
   for (const floor of [2, 3, 4]) {
     await page.getByLabel('Floor', { exact: true }).selectOption(`Floor ${floor}`);
@@ -207,7 +209,7 @@ try {
   await page.getByRole('button', { name: 'View my bookings', exact: true }).click();
   await expect(page.locator('.reservation')).toHaveCount(2);
   await page.reload();
-  await expect(page.getByLabel('Building', { exact: true })).toHaveValue('Coventry');
+  await expect(page.getByRole('combobox', { name: 'Building', exact: true })).toHaveText('Coventry');
   await expect(detail).toContainText('Booked for this time');
   await page.setViewportSize({ width: 390, height: 844 });
   await screenshot(page, 'coventry-mobile.png');
