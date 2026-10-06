@@ -219,7 +219,7 @@ export default function App() {
             <div className="campus-panel">
               <div className="panel-header">
                 <LocationSelect value={building} options={buildings} onChange={value => selectFloor(value, activeSpaces.find(space => space.building === value)?.floor || '')}/>
-                <label className="floor-select"><span className="sr-only">Floor</span><select aria-label="Floor" value={floor} onChange={event => selectFloor(building, event.target.value)}>{floors.map(item => <option key={item}>{item}</option>)}</select></label>
+                <LocationSelect label="Floor" compact value={floor} options={floors} onChange={value => selectFloor(building, value)}/>
                 <div className="view-toggle" aria-label="Display mode"><button className={view === 'map' ? 'active' : ''} onClick={() => setView('map')} aria-pressed={view === 'map'}><Map size={21}/>Map</button><button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')} aria-pressed={view === 'list'}><List size={20}/>List</button></div>
               </div>
               <div className="panel-body">

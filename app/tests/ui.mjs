@@ -46,11 +46,17 @@ async function screenshot(page, filename) {
   assert.ok(size.document <= size.window, `${filename}: document overflow ${JSON.stringify(size)}`);
   await page.screenshot({ path: path.join(outputDir, filename), fullPage: true });
 }
+async function chooseFloor(page, floor) {
+  const field = page.getByRole('combobox', { name: 'Floor', exact: true });
+  if (await field.evaluate(element => element.tagName === 'SELECT')) return field.selectOption(floor);
+  await field.click();
+  await page.getByRole('listbox', { name: 'Floor', exact: true }).getByRole('option', { name: floor, exact: true }).click();
+}
 async function finder(page, floor = 'Floor 2') {
   await go(page, 'Find a classroom');
   await page.getByRole('combobox', { name: 'Building', exact: true }).click();
   await page.getByRole('option', { name: 'Science Center', exact: true }).click();
-  await page.getByLabel('Floor', { exact: true }).selectOption(floor);
+  await chooseFloor(page, floor);
   await page.getByLabel('Booking date', { exact: true }).fill(date);
   await page.locator('.search-bar').getByRole('button', { name: 'Find a classroom', exact: true }).click();
   await expect(page.locator('.feedback')).toContainText('Showing availability');
@@ -100,9 +106,9 @@ try {
   await finder(page); const detail = page.locator('.space-detail');
   await expect(detail.getByRole('button', { name: 'Book this classroom', exact: true })).toBeEnabled();
   for (const [floor, name] of [['Floor 2', 'Classroom 102'], ['Floor 3', 'Classroom 104'], ['Floor 4', 'Classroom 106']]) {
-    await page.getByLabel('Floor', { exact: true }).selectOption(floor); await expect(detail.getByRole('heading', { name, exact: true })).toBeVisible();
+    await chooseFloor(page, floor); await expect(detail.getByRole('heading', { name, exact: true })).toBeVisible();
   }
-  await page.getByLabel('Floor', { exact: true }).selectOption('Floor 2');
+  await chooseFloor(page, 'Floor 2');
   await detail.getByRole('button', { name: 'Book this classroom', exact: true }).click();
   const dialog = page.getByRole('dialog'); const purpose = dialog.getByLabel(/Booking purpose/);
   await dialog.getByRole('button', { name: 'Confirm booking', exact: true }).click();
@@ -115,7 +121,7 @@ try {
   assert.equal((await api(page, '/bookings', 'POST', { ...input, attendees: 31 })).status, 400);
   assert.equal((await api(page, '/bookings', 'POST', { ...input, title: ' ' })).status, 400);
   await finder(page); await expect(detail).toContainText('Booked for this time');
-  await page.getByLabel('Floor', { exact: true }).selectOption('Floor 3'); await expect(detail.getByRole('button', { name: 'Book this classroom', exact: true })).toBeEnabled();
+  await chooseFloor(page, 'Floor 3'); await expect(detail.getByRole('button', { name: 'Book this classroom', exact: true })).toBeEnabled();
   await screenshot(page, 'app-desktop.png');
   // Importing a different date must refresh that date, not the previous schedule.
   await go(admin, 'Schedule');
@@ -174,16 +180,18 @@ try {
   await go(page, 'Find a classroom');
   await page.getByRole('combobox', { name: 'Building', exact: true }).click();
   await page.getByRole('option', { name: 'Coventry', exact: true }).click();
-  assert.deepEqual(await page.getByLabel('Floor', { exact: true }).locator('option').allTextContents(), ['Floor 2', 'Floor 3', 'Floor 4']);
+  await page.getByRole('combobox', { name: 'Floor', exact: true }).click();
+  assert.deepEqual(await page.getByRole('listbox', { name: 'Floor', exact: true }).getByRole('option').allTextContents(), ['Floor 2', 'Floor 3', 'Floor 4']);
+  await page.getByRole('combobox', { name: 'Floor', exact: true }).press('Escape');
   for (const floor of [2, 3, 4]) {
-    await page.getByLabel('Floor', { exact: true }).selectOption(`Floor ${floor}`);
+    await chooseFloor(page, `Floor ${floor}`);
     await page.getByRole('button', { name: 'List', exact: true }).click();
     const names = { 204: 'Large lecture room 204', 301: 'Library 301', 302: 'Club room 302', 303: 'Large lecture room 303' };
     assert.deepEqual(await page.locator('.space-list-item strong').allTextContents(), Array.from({ length: 8 }, (_, i) => names[floor * 100 + i + 1] || `Classroom ${floor * 100 + i + 1}`));
     await page.locator('.space-list-item').last().click();
     await expect(detail.getByRole('heading', { name: `Classroom ${floor * 100 + 8}`, exact: true })).toBeVisible();
   }
-  await page.getByLabel('Floor', { exact: true }).selectOption('Floor 2');
+  await chooseFloor(page, 'Floor 2');
   await page.getByLabel('Booking date', { exact: true }).fill(date);
   await page.locator('.search-bar').getByRole('button', { name: 'Find a classroom', exact: true }).click();
   await expect(page.locator('.feedback')).toContainText('Showing availability');
@@ -210,14 +218,17 @@ try {
   await expect(page.locator('.reservation')).toHaveCount(2);
   await page.reload();
   await expect(page.getByRole('combobox', { name: 'Building', exact: true })).toHaveText('Coventry');
+  await page.getByLabel('Booking date', { exact: true }).fill(date);
+  await page.locator('.search-bar').getByRole('button', { name: 'Find a classroom', exact: true }).click();
   await expect(detail).toContainText('Booked for this time');
   await page.setViewportSize({ width: 390, height: 844 });
   await screenshot(page, 'coventry-mobile.png');
   await go(page, 'Schedule');
-  await page.getByLabel('Floor', { exact: true }).selectOption('Floor 2');
+  await page.getByLabel('Schedule date', { exact: true }).fill(date);
+  await chooseFloor(page, 'Floor 2');
   await expect(page.getByRole('heading', { name: 'Coventry room 201 project meeting', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Coventry room 202 workshop', exact: true })).toBeVisible();
-  await page.getByLabel('Floor', { exact: true }).selectOption('Floor 4');
+  await chooseFloor(page, 'Floor 4');
   await expect(page.getByRole('heading', { name: 'No scheduled entries', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Sign out', exact: true }).click(); await expect(page.locator('.account-identity')).toHaveCount(0);
   assert.equal((await fetch(`${base}/api/bookings`)).status, 401); assert.deepEqual(errors, [], 'No browser errors');

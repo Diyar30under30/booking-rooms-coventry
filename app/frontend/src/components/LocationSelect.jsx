@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 import './LocationSelect.css';
 
-export default function LocationSelect({ value, options, onChange }) {
+export default function LocationSelect({ value, options, onChange, label = 'Building', compact = false }) {
   const id = useId();
   const trigger = useRef(null);
   const menu = useRef(null);
@@ -11,7 +11,15 @@ export default function LocationSelect({ value, options, onChange }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const [position, setPosition] = useState({});
-  function show() { setActive(Math.max(0, options.indexOf(value))); setOpen(true); }
+  function show() {
+    if (compact) {
+      const rect = trigger.current.getBoundingClientRect();
+      const viewport = window.visualViewport;
+      const bottom = (viewport?.offsetTop || 0) + (viewport?.height || window.innerHeight);
+      if (rect.bottom + options.length * 42 + 28 > bottom) trigger.current.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
+    setActive(Math.max(0, options.indexOf(value))); setOpen(true);
+  }
   function choose(index) { onChange(options[index]); setOpen(false); trigger.current?.focus(); }
 
   useLayoutEffect(() => {
@@ -23,7 +31,7 @@ export default function LocationSelect({ value, options, onChange }) {
       const bottomEdge = topEdge + (viewport?.height || window.innerHeight);
       const below = bottomEdge - rect.bottom - 16;
       const above = rect.top - topEdge - 16;
-      const height = Math.min(options.length * 48 + 12, Math.max(below, above), 340);
+      const height = Math.min(options.length * (compact ? 42 : 48) + 12, Math.max(below, above), 340);
       const flip = below < height && above > below;
       setPosition({ left: rect.left, width: rect.width, top: flip ? rect.top - height - 8 : rect.bottom + 8, maxHeight: Math.max(48, height) });
     }
@@ -36,7 +44,7 @@ export default function LocationSelect({ value, options, onChange }) {
       window.removeEventListener('scroll', place, true);
       window.visualViewport?.removeEventListener('resize', place);
     };
-  }, [open, options.length]);
+  }, [open, options.length, compact]);
   useEffect(() => {
     if (!open) return;
     const outside = event => { if (!trigger.current?.contains(event.target) && !menu.current?.contains(event.target)) setOpen(false); };
@@ -62,11 +70,11 @@ export default function LocationSelect({ value, options, onChange }) {
     }
   }
 
-  return <div className="location-select">
-    <button ref={trigger} type="button" role="combobox" aria-label="Building" aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? id : undefined} aria-activedescendant={open ? `${id}-${active}` : undefined} className="location-trigger" onClick={() => open ? setOpen(false) : show()} onKeyDown={onKeyDown} onBlur={() => setOpen(false)}>
-      <span>{value}</span><ChevronDown size={19} aria-hidden="true"/>
+  return <div className={`location-select${compact ? ' floor-dropdown' : ''}`}>
+    <button ref={trigger} type="button" role="combobox" aria-label={label} aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? id : undefined} aria-activedescendant={open ? `${id}-${active}` : undefined} className="location-trigger" onClick={() => open ? setOpen(false) : show()} onKeyDown={onKeyDown} onBlur={() => setOpen(false)}>
+      <span>{value}</span><ChevronDown size={compact ? 16 : 19} aria-hidden="true"/>
     </button>
-    {open && createPortal(<div ref={menu} id={id} role="listbox" aria-label="Building" className="location-menu" style={position} onMouseDown={event => event.preventDefault()}>
+    {open && createPortal(<div ref={menu} id={id} role="listbox" aria-label={label} className={`location-menu${compact ? ' floor-dropdown-menu' : ''}`} style={position} onMouseDown={event => event.preventDefault()}>
       {options.map((option, index) => <div key={option} id={`${id}-${index}`} role="option" aria-selected={option === value} className={`location-option${index === active ? ' is-active' : ''}`} onPointerMove={() => setActive(index)} onClick={() => choose(index)}>
         <span>{option}</span>{option === value && <Check size={19} aria-hidden="true"/>}
       </div>)}

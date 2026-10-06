@@ -12,3 +12,14 @@
 .location-option[aria-selected=true]{background:#e7f1ff;color:#234f79;font-weight:600}
 @media(max-width:600px){.location-select{width:100%;flex:1 1 190px}.location-trigger{min-height:48px}.location-menu{box-shadow:0 8px 24px #1f3d5b26}}
 @media(prefers-reduced-motion:reduce){.location-trigger,.location-trigger svg{transition:none}}
+.location-select.floor-dropdown{width:150px;flex:0 0 auto;margin-left:auto}
+.floor-dropdown .location-trigger{height:42px;min-height:42px;padding:0 12px;gap:12px;border-radius:8px;font-size:15px;font-weight:500}
+.floor-dropdown .location-trigger[aria-expanded=true]{box-shadow:none;border-color:#92aec6}
+.floor-dropdown .location-trigger:focus-visible{outline:2px solid #719bc1;outline-offset:2px;box-shadow:none}
+.floor-dropdown-menu{border-radius:8px;font-size:15px;box-shadow:0 6px 20px #1f3d5b1f}
+.floor-dropdown-menu .location-option{min-height:42px;padding:10px;border-radius:5px;transition:background-color .15s}
+.floor-dropdown-menu .location-option:hover,.floor-dropdown-menu .location-option.is-active{background:#f0f5fb;outline:0}
+.floor-dropdown-menu .location-option[aria-selected=true]{background:#e7f1ff;color:#223b53}
+.floor-dropdown-menu .location-option.is-active{box-shadow:inset 2px 0 #719bc1}
+@media(max-width:600px){.location-select.floor-dropdown{width:120px}.floor-dropdown .location-trigger{font-size:14px}}
+@media(prefers-reduced-motion:reduce){.floor-dropdown-menu .location-option{transition:none}}
