@@ -2,7 +2,7 @@
 
 This branch reconstructs a learning progression from the existing project. These milestone snapshots were created now, not during the original development; commit dates are not backdated. The original `main` branch and its history are preserved. The final application source matches the source snapshot taken from the working project for this task.
 
-**Current milestone: 02/10 — Read-only sample room catalogue**
+**Current milestone: 03/10 — Room search, capacity and equipment filters**
 
 | Version | Git tag | Adds |
 | --- | --- | --- |

@@ -1,5 +1,5 @@
-# Version 02
+# Version 03
 
-Read-only sample room catalogue
+Room search, capacity and equipment filters
 
-Tag: `progress-v02`. Reconstructed milestone, created with current timestamps.
+Tag: `progress-v03`. Reconstructed milestone, created with current timestamps.
