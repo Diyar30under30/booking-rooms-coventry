@@ -1,5 +1,5 @@
-# Version 07
+# Version 08
 
-Full room finder and availability timetable
+Room and Estates administration
 
-Tag: `progress-v07`. Reconstructed milestone, created with current timestamps.
+Tag: `progress-v08`. Reconstructed milestone, created with current timestamps.
