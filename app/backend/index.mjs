@@ -63,10 +63,80 @@ export function createServer(dbPath = path.join(process.env.DATA_DIR || path.joi
       const url = new URL(req.url, 'http://localhost');
       const pathname = url.pathname;
       if (pathname.startsWith('/api/') && ['POST', 'PATCH', 'DELETE'].includes(req.method)) auth.checkOrigin(req);
+      if (pathname === '/api/auth/session' && req.method === 'GET') {
+        const session = auth.session(req);
+        return json(res, 200, { user: publicUser(session?.user), csrfToken: session?.csrfToken || null, setupRequired: !adminExists(db) });
+      }
+      if (pathname === '/api/auth/register' && req.method === 'POST') {
+        auth.rateLimit(req, 'register');
+        const body = await readBody(req);
+        if (!['student', 'teacher', 'staff'].includes(body.role)) throw fail(400, 'Choose student, teacher, or staff.');
+        const input = credentials(body, true);
+        const password = await passwordRecord(input.password);
+        const id = insertUser(db, input, password, body.role, 'pending');
+        return json(res, 201, { user: publicUser(db.prepare('SELECT * FROM users WHERE id = ?').get(id)) });
+      }
+      if (pathname === '/api/auth/login' && req.method === 'POST') {
+        auth.rateLimit(req, 'login');
+        const body = await readBody(req);
+        let input;
+        try { input = credentials(body); } catch { throw fail(401, 'Email or password is incorrect.'); }
+        const user = db.prepare('SELECT * FROM users WHERE email = ?').get(input.email);
+        if (!await verifyPassword(input.password, user)) throw fail(401, 'Email or password is incorrect.');
+        return json(res, 200, auth.issue(user.id, res));
+      }
+      if (pathname === '/api/auth/setup' && req.method === 'POST') {
+        auth.rateLimit(req, 'setup');
+        if (adminExists(db)) throw fail(409, 'An administrator has already been created.');
+        const body = await readBody(req);
+        if (!sameSecret(body.code, auth.secret)) throw fail(403, 'Invalid administrator setup code.');
+        const input = credentials(body, true);
+        const password = await passwordRecord(input.password);
+        db.exec('BEGIN IMMEDIATE');
+        let id;
+        try {
+          if (adminExists(db)) throw fail(409, 'An administrator has already been created.');
+          if (!sameSecret(body.code, auth.secret)) throw fail(403, 'Invalid administrator setup code.');
+          id = insertUser(db, input, password, 'admin', 'approved');
+          db.exec('COMMIT');
+        } catch (error) { db.exec('ROLLBACK'); throw error; }
+        return json(res, 201, auth.issue(id, res));
+      }
+      if (pathname === '/api/auth/logout' && req.method === 'POST') {
+        auth.require(req, { mutation: true });
+        await readBody(req);
+        const session = auth.require(req, { mutation: true });
+        auth.logout(session, res);
+        return json(res, 200, { ok: true });
+      }
       if (pathname === '/api/spaces' && req.method === 'GET') {
         return json(res, 200, db.prepare('SELECT * FROM spaces').all().sort(compareRooms).map(roomView));
       }
       if (pathname === '/api/config' && req.method === 'GET') return json(res, 200, configuration(db));
+      if (pathname === '/api/admin/users' && req.method === 'GET') {
+        auth.require(req, { admin: true });
+        const status = url.searchParams.get('status') || 'all';
+        if (!['all', 'pending', 'approved', 'rejected'].includes(status)) throw fail(400, 'Choose a valid user status.');
+        const users = status === 'all' ? db.prepare('SELECT * FROM users ORDER BY id').all() : db.prepare('SELECT * FROM users WHERE status = ? ORDER BY id').all(status);
+        return json(res, 200, users.map(publicUser));
+      }
+      const updateUser = pathname.match(/^\/api\/admin\/users\/(\d+)$/);
+      if (updateUser && req.method === 'PATCH') {
+        auth.require(req, { admin: true, mutation: true });
+        const body = await readBody(req);
+        const { user: actor } = auth.require(req, { admin: true, mutation: true });
+        if (body.status === undefined && body.role === undefined) throw fail(400, 'Choose a status or role to change.');
+        if (body.status !== undefined && !['approved', 'rejected'].includes(body.status)) throw fail(400, 'Choose approved or rejected.');
+        if (body.role !== undefined && !['student','teacher','staff','room_admin','admin'].includes(body.role)) throw fail(400, 'Choose a valid role.');
+        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(Number(updateUser[1]));
+        if (!user) throw fail(404, 'User not found.');
+        const role = body.role ?? user.role, status = body.status ?? user.status;
+        if (user.id === actor.id && (role !== 'admin' || status !== 'approved')) throw fail(403, 'You cannot remove your own Estates administrator access.');
+        if (['admin','room_admin'].includes(role) && status !== 'approved') throw fail(400, 'Administrators must be approved. Change their role before rejecting an account.');
+        if (user.role === 'admin' && role !== 'admin' && db.prepare("SELECT count(*) AS n FROM users WHERE role='admin' AND status='approved'").get().n <= 1) throw fail(403, 'Keep at least one Estates administrator.');
+        db.prepare('UPDATE users SET status = ?, role = ? WHERE id = ?').run(status, role, user.id);
+        return json(res, 200, { user: publicUser(db.prepare('SELECT * FROM users WHERE id = ?').get(user.id)) });
+      }
       if (pathname.startsWith('/api/')) throw fail(404, 'API route not found.');
       if (req.method !== 'GET' && req.method !== 'HEAD') throw fail(405, 'Method not allowed.');
       let decoded;

@@ -1,5 +1,5 @@
-# Version 04
+# Version 05
 
-Persistent SQLite catalogue and Node API
+Accounts, sessions and account approval
 
-Tag: `progress-v04`. Reconstructed milestone, created with current timestamps.
+Tag: `progress-v05`. Reconstructed milestone, created with current timestamps.

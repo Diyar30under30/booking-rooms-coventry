@@ -2,7 +2,7 @@
 
 This branch reconstructs a learning progression from the existing project. These milestone snapshots were created now, not during the original development; commit dates are not backdated. The original `main` branch and its history are preserved. The final application source matches the source snapshot taken from the working project for this task.
 
-**Current milestone: 04/10 — Persistent SQLite catalogue and Node API**
+**Current milestone: 05/10 — Accounts, sessions and account approval**
 
 | Version | Git tag | Adds |
 | --- | --- | --- |
@@ -29,7 +29,7 @@ npm run dev
 
 Also run `npm run dev:server` in a second terminal from `app/`. Vite proxies the local API on port 3001. For a single server, run `npm run build` then `npm start` and open http://localhost:3001.
 
-Accounts arrive in version 05.
+Create the first local administrator using the generated `data/admin-setup-code.txt` code through Sign in / Register → Set up administrator. Choose your own credentials. Local SQLite accounts are separate from hosted Supabase accounts.
 
 Requests arrive in version 06.
 
