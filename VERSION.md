@@ -1,5 +1,5 @@
-# Version 05
+# Version 06
 
-Accounts, sessions and account approval
+Booking requests, conflict checks and personal history
 
-Tag: `progress-v05`. Reconstructed milestone, created with current timestamps.
+Tag: `progress-v06`. Reconstructed milestone, created with current timestamps.
