@@ -2,7 +2,7 @@
 
 This branch reconstructs a learning progression from the existing project. These milestone snapshots were created now, not during the original development; commit dates are not backdated. The original `main` branch and its history are preserved. The final application source matches the source snapshot taken from the working project for this task.
 
-**Current milestone: 03/10 — Room search, capacity and equipment filters**
+**Current milestone: 04/10 — Persistent SQLite catalogue and Node API**
 
 | Version | Git tag | Adds |
 | --- | --- | --- |
@@ -27,7 +27,7 @@ npm ci
 npm run dev
 ```
 
-Versions 01–03 are frontend prototypes using sample data and do not persist bookings.
+Also run `npm run dev:server` in a second terminal from `app/`. Vite proxies the local API on port 3001. For a single server, run `npm run build` then `npm start` and open http://localhost:3001.
 
 Accounts arrive in version 05.
 

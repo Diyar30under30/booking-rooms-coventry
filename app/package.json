@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite --mode campus-local --host 127.0.0.1",
+    "dev:server": "node --watch backend/index.mjs",
     "build": "vite build --mode campus-local",
     "build:local": "vite build --mode campus-local",
-    "dev:local": "vite --mode campus-local --host 127.0.0.1"
+    "dev:local": "vite --mode campus-local --host 127.0.0.1",
+    "start": "node backend/index.mjs"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.2.0",

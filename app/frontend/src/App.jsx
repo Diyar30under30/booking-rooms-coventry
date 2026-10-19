@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import sampleRooms from './sample-rooms.js';
 
 export default function App(){
-const [rooms,setRooms]=useState(sampleRooms); const [error,setError]=useState('');
+const [rooms,setRooms]=useState([]); const [error,setError]=useState('');
 const [building,setBuilding]=useState(''),[capacity,setCapacity]=useState(''),[equipment,setEquipment]=useState(''),[accessible,setAccessible]=useState(false);
 const visible=rooms.filter(r=>(!building||r.building===building)&&(!capacity||(r.capacity!=null&&r.capacity>=Number(capacity)))&&(!equipment||r.amenities.some(a=>a.toLowerCase().includes(equipment.toLowerCase())))&&(!accessible||r.accessible));
+useEffect(()=>{fetch('/api/spaces').then(r=>{if(!r.ok)throw Error('Catalogue unavailable');return r.json();}).then(r=>setRooms(r.filter(x=>x.active))).catch(e=>setError(e.message));},[]);
 return <main><header><small>University Room Booking</small><h1>Find your campus room</h1><p>A shared place for teaching, study and meetings.</p></header>{error&&<p className="error" role="alert">{error}</p>}<div className="filters"><label>Building<select value={building} onChange={e=>setBuilding(e.target.value)}><option value="">All buildings</option>{[...new Set(rooms.map(r=>r.building))].map(b=><option key={b}>{b}</option>)}</select></label><label>Minimum capacity<input type="number" min="1" value={capacity} onChange={e=>setCapacity(e.target.value)}/></label><label>Equipment<input value={equipment} onChange={e=>setEquipment(e.target.value)}/></label><label className="check"><input type="checkbox" checked={accessible} onChange={e=>setAccessible(e.target.checked)}/>Accessible rooms only</label></div><div className="grid">{visible.map(room=><article key={room.id}><h2>{room.name}</h2><p>{room.building} · {room.type}</p><p>{room.capacity==null?"Capacity unrecorded":`${room.capacity} people`}</p><p>{room.amenities.join(" · ")}</p><p>{room.accessible?"Accessible room":"Accessibility not confirmed"}</p></article>)}</div>{!visible.length&&!error&&<p>No rooms match.</p>}</main>;
 }

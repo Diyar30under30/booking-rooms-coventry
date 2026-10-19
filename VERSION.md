@@ -1,5 +1,5 @@
-# Version 03
+# Version 04
 
-Room search, capacity and equipment filters
+Persistent SQLite catalogue and Node API
 
-Tag: `progress-v03`. Reconstructed milestone, created with current timestamps.
+Tag: `progress-v04`. Reconstructed milestone, created with current timestamps.
