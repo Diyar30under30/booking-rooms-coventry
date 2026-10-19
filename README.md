@@ -2,7 +2,7 @@
 
 This branch reconstructs a learning progression from the existing project. These milestone snapshots were created now, not during the original development; commit dates are not backdated. The original `main` branch and its history are preserved. The final application source matches the source snapshot taken from the working project for this task.
 
-**Current milestone: 06/10 — Booking requests, conflict checks and personal history**
+**Current milestone: 07/10 — Full room finder and availability timetable**
 
 | Version | Git tag | Adds |
 | --- | --- | --- |

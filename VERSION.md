@@ -1,5 +1,5 @@
-# Version 06
+# Version 07
 
-Booking requests, conflict checks and personal history
+Full room finder and availability timetable
 
-Tag: `progress-v06`. Reconstructed milestone, created with current timestamps.
+Tag: `progress-v07`. Reconstructed milestone, created with current timestamps.
