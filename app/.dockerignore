@@ -1,0 +1,14 @@
+node_modules
+dist
+preview-dist
+.vercel
+data
+.git
+*.sqlite*
+.env*
+*.log
+docs/*.png
+docs/*.jpg
+docs/*.jpeg
+docs/*.webp
+test-results

@@ -2,7 +2,7 @@
 
 This branch reconstructs a learning progression from the existing project. These milestone snapshots were created now, not during the original development; commit dates are not backdated. The original `main` branch and its history are preserved. The final application source matches the source snapshot taken from the working project for this task.
 
-**Current milestone: 08/10 — Room and Estates administration**
+**Current milestone: 09/10 — Regression tests and deployment configuration**
 
 | Version | Git tag | Adds |
 | --- | --- | --- |
@@ -33,7 +33,7 @@ Create the first local administrator using the generated `data/admin-setup-code.
 
 Students can book designated study rooms; staff/teachers request teaching rooms or labs. Study rooms auto-approve; other requests need administrator review. Requests are stored before review. The full review UI arrives in v08; older milestones expose only the features described above.
 
-Automated regression suites arrive in version 09.
+Checks: `npm test`, `npm run verify:brief`, `npm run verify:ui`, and `npm run verify:availability`. Browser suites require Microsoft Edge. All use isolated test data.
 
 ## Inspect a version safely
 

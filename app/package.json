@@ -9,7 +9,12 @@
     "build": "vite build --mode campus-local",
     "build:local": "vite build --mode campus-local",
     "dev:local": "vite --mode campus-local --host 127.0.0.1",
-    "start": "node backend/index.mjs"
+    "build:preview": "node scripts/build-preview.mjs",
+    "start": "node backend/index.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "verify:ui": "node tests/ui.mjs",
+    "verify:brief": "node tests/brief-ui.mjs",
+    "verify:availability": "node tests/ui-availability.mjs"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.2.0",

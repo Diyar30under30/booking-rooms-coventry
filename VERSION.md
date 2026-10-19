@@ -1,5 +1,5 @@
-# Version 08
+# Version 09
 
-Room and Estates administration
+Regression tests and deployment configuration
 
-Tag: `progress-v08`. Reconstructed milestone, created with current timestamps.
+Tag: `progress-v09`. Reconstructed milestone, created with current timestamps.

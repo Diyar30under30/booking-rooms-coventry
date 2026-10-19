@@ -1,0 +1,17 @@
+name: bookingclubpr
+services:
+  campus-booking:
+    build:
+      context: ../app
+      dockerfile: ../deployment/Dockerfile
+    environment:
+      TZ: ${TZ:-Asia/Qyzylorda}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+    ports:
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - booking-data:/app/data
+    restart: unless-stopped
+volumes:
+  booking-data:
