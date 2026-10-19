@@ -1,5 +1,5 @@
-# Version 01
+# Version 02
 
-React starter and project layout
+Read-only sample room catalogue
 
-Tag: `progress-v01`. Reconstructed milestone, created with current timestamps.
+Tag: `progress-v02`. Reconstructed milestone, created with current timestamps.
